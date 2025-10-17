@@ -117,7 +117,6 @@ const handleImageError = () => {
         <AlertDescription>{{ voteStore.error }}</AlertDescription>
       </Alert>
     </CardContent>
-
     <CardFooter class="flex space-x-3">
       <Button
         variant="outline"

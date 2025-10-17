@@ -136,6 +136,78 @@ export const validateImageResolution = (file: File): Promise<{
 };
 
 /**
+ * Compresser une image côté client via canvas
+ * @param file - Fichier image source
+ * @param options - Options de compression
+ * @returns Nouveau fichier compressé
+ */
+export const compressImage = (
+  file: File,
+  options: {
+    maxWidth?: number;
+    maxHeight?: number;
+    quality?: number; // 0..1
+    mimeType?: 'image/jpeg' | 'image/webp' | 'image/png';
+  } = {}
+): Promise<File> => {
+  const {
+    maxWidth = 1200,
+    maxHeight = 1200,
+    quality = 0.82,
+    mimeType = 'image/jpeg'
+  } = options;
+
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(image.src);
+
+      // Calcul des dimensions cibles en respectant le ratio
+      let targetWidth = image.width;
+      let targetHeight = image.height;
+      const widthRatio = maxWidth / targetWidth;
+      const heightRatio = maxHeight / targetHeight;
+      const ratio = Math.min(1, widthRatio, heightRatio);
+      targetWidth = Math.floor(targetWidth * ratio);
+      targetHeight = Math.floor(targetHeight * ratio);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas non supporté'));
+        return;
+      }
+      ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Echec de la compression'));
+            return;
+          }
+          const compressedFile = new File([blob], file.name.replace(/\.(jpe?g|png|webp)$/i, '.jpg'), {
+            type: mimeType,
+            lastModified: Date.now()
+          });
+          resolve(compressedFile);
+        },
+        mimeType,
+        quality
+      );
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(image.src);
+      reject(new Error('Impossible de lire le fichier image'));
+    };
+
+    image.src = URL.createObjectURL(file);
+  });
+};
+
+/**
  * Validation complète avant soumission
  * @param cardNumber - Numéro de carte
  * @param cardFile - Fichier de carte
@@ -194,6 +266,7 @@ export default {
   validateCardNumber,
   validateCardFile,
   validateImageResolution,
+  compressImage,
   validateVoteSubmission,
   maskCardNumber
 };

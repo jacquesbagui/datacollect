@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useVoteStore } from '@/stores/vote.store';
-import { validateCardNumber, validateCardFile, validateImageResolution } from '@/services/vote.service';
+import { validateCardNumber, validateCardFile, validateImageResolution, compressImage } from '@/services/vote.service';
 
 const voteStore = useVoteStore();
 
@@ -42,7 +42,19 @@ const handleFileChange = async (event: Event) => {
       return;
     }
 
-    cardFile.value = file;
+    // Compression de l'image (réduction taille et dimensions)
+    try {
+      const compressed = await compressImage(file, {
+        maxWidth: 1400,
+        maxHeight: 1400,
+        quality: 0.8,
+        mimeType: 'image/jpeg'
+      });
+      cardFile.value = compressed.size < file.size ? compressed : file;
+    } catch (e) {
+      // En cas d'échec, fallback au fichier original
+      cardFile.value = file;
+    }
     error.value = '';
   }
 };
