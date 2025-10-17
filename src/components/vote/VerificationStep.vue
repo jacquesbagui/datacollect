@@ -84,7 +84,7 @@ const handleVerification = async () => {
         <span>Vérification de l'Électeur</span>
       </CardTitle>
       <CardDescription class="text-orange-50">
-        Veuillez fournir vos informations pour accéder au vote
+        Veuillez fournir vos informations pour accéder au sondage
       </CardDescription>
     </CardHeader>
 
