@@ -54,8 +54,18 @@ interface CandidatesApiResponse {
  */
 interface EligibilityApiResponse {
   success: boolean;
-  eligible: boolean;
-  message: string;
+  data: {
+    eligible: boolean;
+    exists_in_registry: boolean;
+    name_matches: boolean;
+    has_voted: boolean;
+    voter_info: {
+      full_name: string;
+      vote_place: string;
+      department: string;
+    };
+    message: string;
+  };
 }
 
 /**
@@ -143,6 +153,12 @@ export const apiService = {
   checkEligibility: async (cardNumber: string, name: string): Promise<{
     eligible: boolean;
     message: string;
+    hasVoted: boolean;
+    voterInfo?: {
+      fullName: string;
+      votePlace: string;
+      department: string;
+    };
   }> => {
     try {
       const response = await fetch(`${API_BASE_URL}/check-eligibility`, {
@@ -157,11 +173,25 @@ export const apiService = {
         })
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
       const data: EligibilityApiResponse = await response.json();
 
+      if (!data.success) {
+        throw new Error(data.data?.message || 'Erreur lors de la vérification');
+      }
+
       return {
-        eligible: data.eligible,
-        message: data.message
+        eligible: data.data.eligible,
+        message: data.data.message,
+        hasVoted: data.data.has_voted,
+        voterInfo: data.data.voter_info ? {
+          fullName: data.data.voter_info.full_name,
+          votePlace: data.data.voter_info.vote_place,
+          department: data.data.voter_info.department
+        } : undefined
       };
     } catch (error) {
       return handleApiError(error);

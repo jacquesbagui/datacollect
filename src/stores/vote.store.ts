@@ -78,6 +78,10 @@ export const useVoteStore = defineStore('vote', () => {
 
       if (!result.eligible) {
         error.value = result.message;
+      } else if (result.hasVoted) {
+        error.value = 'Ce numéro de carte a déjà voté';
+        isEligible.value = false;
+        return false;
       }
 
       return result.eligible;
@@ -100,7 +104,8 @@ export const useVoteStore = defineStore('vote', () => {
       const eligible = await checkEligibility(cardNum, name);
 
       if (!eligible) {
-        throw new Error('Ce numéro de carte a déjà voté ou n\'est pas éligible');
+        // L'erreur est déjà définie dans checkEligibility
+        return;
       }
 
       // Sauvegarder les données

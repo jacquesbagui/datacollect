@@ -58,7 +58,7 @@ const handleRefresh = () => {
         Merci d'avoir voté !
       </h2>
       <p class="text-gray-600 mb-6 max-w-md mx-auto">
-        Votre vote a été enregistré avec succès. Merci d'avoir participé à l'élection.
+        Votre vote a été enregistré avec succès
       </p>
 
 
