@@ -59,7 +59,9 @@ interface EligibilityApiResponse {
     exists_in_registry: boolean;
     name_matches: boolean;
     has_voted: boolean;
-    voter_info: {
+    voted_at?: string;
+    reason?: string;
+    voter_info?: {
       full_name: string;
       vote_place: string;
       department: string;
@@ -154,6 +156,8 @@ export const apiService = {
     eligible: boolean;
     message: string;
     hasVoted: boolean;
+    votedAt?: string;
+    reason?: string;
     voterInfo?: {
       fullName: string;
       votePlace: string;
@@ -173,11 +177,22 @@ export const apiService = {
         })
       });
 
+      const data: EligibilityApiResponse = await response.json();
+
+      // Gérer le cas où l'API retourne 403 pour un vote déjà effectué
+      if (response.status === 403 && data.data?.has_voted) {
+        return {
+          eligible: false,
+          message: data.data.message || 'Cet électeur a déjà participé au vote',
+          hasVoted: true,
+          votedAt: data.data.voted_at,
+          reason: data.data.reason
+        };
+      }
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-
-      const data: EligibilityApiResponse = await response.json();
 
       if (!data.success) {
         throw new Error(data.data?.message || 'Erreur lors de la vérification');
@@ -187,6 +202,8 @@ export const apiService = {
         eligible: data.data.eligible,
         message: data.data.message,
         hasVoted: data.data.has_voted,
+        votedAt: data.data.voted_at,
+        reason: data.data.reason,
         voterInfo: data.data.voter_info ? {
           fullName: data.data.voter_info.full_name,
           votePlace: data.data.voter_info.vote_place,

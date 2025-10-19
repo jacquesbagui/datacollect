@@ -77,9 +77,14 @@ export const useVoteStore = defineStore('vote', () => {
       isEligible.value = result.eligible;
 
       if (!result.eligible) {
-        error.value = result.message;
-      } else if (result.hasVoted) {
-        error.value = 'Ce numéro de carte a déjà voté';
+        if (result.hasVoted) {
+          // Message spécifique pour un vote déjà effectué
+          const votedDate = result.votedAt ? new Date(result.votedAt).toLocaleDateString('fr-FR') : '';
+          error.value = result.message || `Cet électeur a déjà participé au vote${votedDate ? ` le ${votedDate}` : ''}`;
+        } else {
+          // Message pour autres cas d'inéligibilité
+          error.value = result.message || 'Cet électeur n\'est pas éligible pour voter';
+        }
         isEligible.value = false;
         return false;
       }
