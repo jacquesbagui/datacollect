@@ -137,9 +137,10 @@ export const apiService = {
   /**
    * Vérification de l'éligibilité d'un électeur
    * @param cardNumber - Numéro de carte d'électeur
+   * @param name - Nom de l'électeur
    * @returns Statut d'éligibilité
    */
-  checkEligibility: async (cardNumber: string): Promise<{
+  checkEligibility: async (cardNumber: string, name: string): Promise<{
     eligible: boolean;
     message: string;
   }> => {
@@ -151,7 +152,8 @@ export const apiService = {
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          card_number: cardNumber
+          card_number: cardNumber.trim().replace(/\s/g, ''),
+          name: name.trim()
         })
       });
 
@@ -169,13 +171,13 @@ export const apiService = {
   /**
    * Soumission du vote complet
    * @param voterCardNumber - Numéro de carte d'électeur
-   * @param voterCardImage - Image de la carte d'électeur
+   * @param voterName - Nom de l'électeur
    * @param candidateId - ID du candidat sélectionné
    * @returns Confirmation du vote
    */
   submitVote: async (
     voterCardNumber: string,
-    voterCardImage: File,
+    voterName: string,
     candidateId: number
   ): Promise<{
     success: boolean;
@@ -184,17 +186,17 @@ export const apiService = {
     votedAt: string;
   }> => {
     try {
-      const formData = new FormData();
-      formData.append('voter_card_number', voterCardNumber);
-      formData.append('voter_card_image', voterCardImage);
-      formData.append('candidate_id', candidateId.toString());
-
       const response = await fetch(`${API_BASE_URL}/votes`, {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: formData
+        body: JSON.stringify({
+          voter_card_number: voterCardNumber.trim().replace(/\s/g, ''),
+          voter_name: voterName.trim(),
+          candidate_id: candidateId
+        })
       });
 
       const data: VoteApiResponse = await response.json();

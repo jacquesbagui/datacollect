@@ -13,8 +13,10 @@ import { ELECTION_CONFIG } from '@/utils/constants';
             <Vote class="h-8 w-8 text-white" />
           </div>
           <div>
-            <h1 class="text-2xl font-bold text-gray-900">DataCollect</h1>
-            <p class="text-sm text-gray-600">Sondage électoral</p>
+            <h1 class="text-2xl font-bold text-gray-900">{{ ELECTION_CONFIG.TITLE }}</h1>
+            <p class="text-sm text-gray-600">
+              {{ ELECTION_CONFIG.DESCRIPTION }}
+            </p>
           </div>
         </div>
 

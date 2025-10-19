@@ -55,10 +55,10 @@ const handleRefresh = () => {
 
       <!-- Message de succès -->
       <h2 class="text-3xl font-bold text-gray-900 mb-3">
-        Sondage Enregistré !
+        Merci d'avoir voté !
       </h2>
       <p class="text-gray-600 mb-6 max-w-md mx-auto">
-        Votre sondage a été enregistré avec succès. Merci d'avoir participé.
+        Votre vote a été enregistré avec succès. Merci d'avoir participé à l'élection.
       </p>
 
 

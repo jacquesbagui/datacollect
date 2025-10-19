@@ -73,7 +73,7 @@ export const ERROR_MESSAGES = {
  */
 export const SUCCESS_MESSAGES = {
   VOTER_VERIFIED: 'Électeur vérifié avec succès',
-  VOTE_SUBMITTED: 'Vote enregistré avec succès',
+  VOTE_SUBMITTED: 'Merci d\'avoir voté',
   FILE_UPLOADED: 'Fichier chargé avec succès'
 } as const;
 
@@ -97,18 +97,17 @@ export const THEME_COLORS = {
  */
 export const ELECTION_CONFIG = {
   YEAR: '2025',
-  TITLE: 'Élection 2025',
-  DESCRIPTION: 'Élection Présidentielle'
+  TITLE: 'Election Présidentielle 2025',
+  DESCRIPTION: 'Le vrai vote inclusif c\'est ici'
 } as const;
 
 /**
  * URLs et endpoints (à configurer selon l'environnement)
  */
 export const API_ENDPOINTS = {
-  VERIFY_VOTER: '/voter/verify',
+  CHECK_ELIGIBILITY: '/api/check-eligibility',
   GET_CANDIDATES: '/candidates',
-  SUBMIT_VOTE: '/vote/submit',
-  CHECK_ELIGIBILITY: '/voter/:id/eligible',
+  SUBMIT_VOTE: '/api/votes',
   GET_CONFIRMATION: '/vote/confirmation/:id'
 } as const;
 

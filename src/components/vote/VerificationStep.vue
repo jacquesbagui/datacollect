@@ -7,15 +7,26 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useVoteStore } from '@/stores/vote.store';
-import { validateCardNumber, validateCardFile, validateImageResolution, compressImage } from '@/services/vote.service';
+import { validateCardNumber, validateCardFile, validateImageResolution, compressImage, formatCardNumberInput } from '@/services/vote.service';
 
 const voteStore = useVoteStore();
 
 // State local
 const cardNumber = ref<string>('');
+const voterName = ref<string>('');
 const cardFile = ref<File | null>(null);
 const error = ref<string>('');
 const fileInputRef = ref<HTMLInputElement | null>(null);
+
+/**
+ * Gestion du formatage du numéro de carte pendant la saisie
+ */
+const handleCardNumberInput = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const formatted = formatCardNumberInput(target.value);
+  cardNumber.value = formatted;
+  target.value = formatted;
+};
 
 /**
  * Gestion du changement de fichier
@@ -72,16 +83,22 @@ const handleVerification = async () => {
     return;
   }
 
-  // Validation du fichier
-  const fileValidation = validateCardFile(cardFile.value);
-  if (!fileValidation.isValid) {
-    error.value = fileValidation.errors[0] || 'Erreur de validation';
+  // Validation du nom
+  if (!voterName.value.trim()) {
+    error.value = 'Le nom est requis';
     return;
   }
 
+  // Validation du fichier (commented out)
+  // const fileValidation = validateCardFile(cardFile.value);
+  // if (!fileValidation.isValid) {
+  //   error.value = fileValidation.errors[0] || 'Erreur de validation';
+  //   return;
+  // }
+
   // Appel au store pour sauvegarder et vérifier l'éligibilité
   try {
-    await voteStore.saveVerificationData(cardNumber.value, cardFile.value!);
+    await voteStore.saveVerificationData(cardNumber.value, voterName.value.trim());
   } catch (err: any) {
     error.value = err.message || 'Erreur de vérification';
   }
@@ -96,7 +113,7 @@ const handleVerification = async () => {
         <span>Vérification de l'Électeur</span>
       </CardTitle>
       <CardDescription class="text-orange-50">
-        Veuillez fournir vos informations pour accéder au sondage
+        Veuillez fournir vos informations pour accéder au vote
       </CardDescription>
     </CardHeader>
 
@@ -117,18 +134,35 @@ const handleVerification = async () => {
             id="cardNumber"
             v-model="cardNumber"
             type="text"
-            placeholder="Ex: ABC123456789"
+            placeholder="V 0000 0000 00"
             class="pl-10 h-12 text-lg border-2 focus:border-orange-500"
-            maxlength="20"
+            maxlength="15"
+            @input="handleCardNumberInput"
           />
           <FileText class="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
         </div>
-        <p class="text-sm text-gray-500">
-          Votre numéro est inscrit sur votre carte d'électeur (6-20 caractères)
-        </p>
+      </div>
+
+      <!-- Nom ou prénom -->
+      <div class="space-y-2">
+        <Label for="voterName" class="text-base font-semibold">
+          Nom ou Prénom
+        </Label>
+        <div class="relative">
+          <Input
+            id="voterName"
+            v-model="voterName"
+            type="text"
+            placeholder="Ex: Jean Dupont"
+            class="pl-10 h-12 text-lg border-2 focus:border-orange-500"
+            maxlength="50"
+          />
+          <User class="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+        </div>
       </div>
 
       <!-- Upload carte -->
+      <!-- COMMENTED OUT: Photo upload section removed per requirements
       <div class="space-y-2">
         <Label for="cardUpload" class="text-base font-semibold">
           Photo de la Carte d'Électeur
@@ -157,6 +191,7 @@ const handleVerification = async () => {
           <span class="text-sm">Fichier chargé avec succès</span>
         </div>
       </div>
+      -->
     </CardContent>
 
     <CardFooter>

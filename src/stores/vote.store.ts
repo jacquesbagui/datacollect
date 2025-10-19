@@ -14,6 +14,7 @@ export const useVoteStore = defineStore('vote', () => {
 
   const currentStep = ref<VoteStep>(VoteStepEnum.VERIFICATION);
   const voterCardNumber = ref<string>('');
+  const voterName = ref<string>('');
   const voterCardImage = ref<File | null>(null);
   const candidates = ref<Candidate[]>([]);
   const selectedCandidateId = ref<number | null>(null);
@@ -28,7 +29,7 @@ export const useVoteStore = defineStore('vote', () => {
    * Vérifier si l'électeur est vérifié
    */
   const isVoterVerified = computed(() => {
-    return voterCardNumber.value !== '' && voterCardImage.value !== null;
+    return voterCardNumber.value !== '' && voterName.value !== '';
   });
 
   /**
@@ -70,9 +71,9 @@ export const useVoteStore = defineStore('vote', () => {
   /**
    * Vérifier l'éligibilité d'un électeur
    */
-  const checkEligibility = async (cardNum: string): Promise<boolean> => {
+  const checkEligibility = async (cardNum: string, name: string): Promise<boolean> => {
     try {
-      const result = await apiService.checkEligibility(cardNum);
+      const result = await apiService.checkEligibility(cardNum, name);
       isEligible.value = result.eligible;
 
       if (!result.eligible) {
@@ -90,13 +91,13 @@ export const useVoteStore = defineStore('vote', () => {
   /**
    * Sauvegarder les données de vérification
    */
-  const saveVerificationData = async (cardNum: string, cardImg: File): Promise<void> => {
+  const saveVerificationData = async (cardNum: string, name: string): Promise<void> => {
     try {
       isLoading.value = true;
       error.value = null;
 
       // Vérifier l'éligibilité
-      const eligible = await checkEligibility(cardNum);
+      const eligible = await checkEligibility(cardNum, name);
 
       if (!eligible) {
         throw new Error('Ce numéro de carte a déjà voté ou n\'est pas éligible');
@@ -104,7 +105,7 @@ export const useVoteStore = defineStore('vote', () => {
 
       // Sauvegarder les données
       voterCardNumber.value = cardNum;
-      voterCardImage.value = cardImg;
+      voterName.value = name;
 
       // Passer à l'étape suivante
       currentStep.value = VoteStepEnum.VOTE;
@@ -178,7 +179,7 @@ export const useVoteStore = defineStore('vote', () => {
 
       const response = await apiService.submitVote(
         voterCardNumber.value,
-        voterCardImage.value!,
+        voterName.value,
         selectedCandidateId.value!
       );
       console.log("submitVote response :", response);

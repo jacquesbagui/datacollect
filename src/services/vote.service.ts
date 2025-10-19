@@ -21,27 +21,35 @@ export const validateCardNumber = (cardNumber: string): ValidationResult => {
     return { isValid: false, errors };
   }
 
-  // Nettoyer les espaces
-  const cleanNumber = cardNumber.trim();
+  // Nettoyer les espaces et convertir en majuscules
+  const cleanNumber = cardNumber.trim().toUpperCase();
 
-  // Vérifier la longueur (6-20 caractères selon l'API)
-  if (cleanNumber.length < 6) {
-    errors.push('Le numéro de carte doit contenir au moins 6 caractères');
+  // Vérifier le format spécifique: V 0074 2666 98
+  const cardNumberPattern = /^V\s?\d{4}\s?\d{4}\s?\d{2}$/;
+  if (!cardNumberPattern.test(cleanNumber)) {
+    errors.push('Le numéro doit être au format: V 0074 2666 98');
+    return { isValid: false, errors };
   }
 
-  if (cleanNumber.length > 20) {
-    errors.push('Le numéro de carte ne doit pas dépasser 20 caractères');
+  // Extraire les chiffres pour validation supplémentaire
+  const digitsOnly = cleanNumber.replace(/[V\s]/g, '');
+
+  // Vérifier que tous les caractères restants sont des chiffres
+  if (!/^\d+$/.test(digitsOnly)) {
+    errors.push('Le numéro d\'électeur ne doit contenir que des lettres et des chiffres');
+    return { isValid: false, errors };
   }
 
-  // Vérifier le format (alphanumérique)
-  if (!VALIDATION_RULES.VOTER_NUMBER.PATTERN.test(cleanNumber)) {
-    errors.push(ERROR_MESSAGES.VOTER_NUMBER_INVALID_FORMAT);
+  // Vérifier la longueur totale (V + 10 chiffres)
+  if (digitsOnly.length !== 10) {
+    errors.push('Le numéro doit contenir exactement 10 chiffres après le V');
+    return { isValid: false, errors };
   }
 
   return {
-    isValid: errors.length === 0,
-    errors,
-    cleanValue: cleanNumber
+    isValid: true,
+    errors: [],
+    cleanValue: cleanNumber.replace(/\s/g, '') // Retourner sans espaces pour l'API
   };
 };
 
@@ -246,6 +254,40 @@ export const validateVoteSubmission = async (
 };
 
 /**
+ * Formater le numéro de carte pendant la saisie
+ * @param input - Valeur saisie
+ * @returns Valeur formatée
+ */
+export const formatCardNumberInput = (input: string): string => {
+  // Nettoyer l'entrée (garder seulement V et les chiffres)
+  const cleaned = input.replace(/[^V0-9]/gi, '').toUpperCase();
+
+  // Si ça commence par V, formater
+  if (cleaned.startsWith('V')) {
+    const digits = cleaned.substring(1);
+
+    // Limiter à 10 chiffres après V
+    const limitedDigits = digits.substring(0, 10);
+
+    // Formater avec espaces: V 0074 2666 98
+    if (limitedDigits.length <= 4) {
+      return `V ${limitedDigits}`;
+    } else if (limitedDigits.length <= 8) {
+      return `V ${limitedDigits.substring(0, 4)} ${limitedDigits.substring(4)}`;
+    } else {
+      return `V ${limitedDigits.substring(0, 4)} ${limitedDigits.substring(4, 8)} ${limitedDigits.substring(8)}`;
+    }
+  }
+
+  // Si ça ne commence pas par V, ajouter V
+  if (cleaned.length > 0 && !cleaned.startsWith('V')) {
+    return formatCardNumberInput(`V${cleaned}`);
+  }
+
+  return cleaned;
+};
+
+/**
  * Formater un numéro de carte pour l'affichage (masqué)
  * @param cardNumber - Numéro complet
  * @returns Numéro masqué
@@ -255,6 +297,15 @@ export const maskCardNumber = (cardNumber: string): string => {
     return cardNumber;
   }
 
+  // Format: V0074266698 -> V 0074 2666 98
+  const cleanNumber = cardNumber.replace(/\s/g, '');
+
+  if (cleanNumber.startsWith('V') && cleanNumber.length === 11) {
+    const digits = cleanNumber.substring(1);
+    return `V ${digits.substring(0, 4)} ${digits.substring(4, 8)} ${digits.substring(8)}`;
+  }
+
+  // Fallback pour autres formats
   const start = cardNumber.substring(0, 3);
   const end = cardNumber.substring(cardNumber.length - 3);
   const middle = '*'.repeat(cardNumber.length - 6);
@@ -268,5 +319,6 @@ export default {
   validateImageResolution,
   compressImage,
   validateVoteSubmission,
+  formatCardNumberInput,
   maskCardNumber
 };
